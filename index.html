@@ -97,41 +97,7 @@
       background: var(--border);
     }
 
-    /* ── API key ── */
-    .api-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .api-row label {
-      font-size: 0.88rem;
-      font-weight: 600;
-      color: var(--text-mid);
-      white-space: nowrap;
-    }
-
-    .api-row input {
-      flex: 1;
-      min-width: 220px;
-      padding: 10px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-family: 'Courier New', monospace;
-      color: var(--text-dark);
-      background: #f8fdf9;
-      transition: border-color 0.2s;
-      outline: none;
-    }
-
-    .api-row input:focus {
-      border-color: var(--green-light);
-      box-shadow: 0 0 0 3px rgba(82,183,136,0.15);
-    }
-
-    .api-hint {
+    .hint {
       font-size: 0.76rem;
       color: #7aab8f;
       margin-top: 6px;
@@ -381,9 +347,7 @@
       margin-top: 6px;
     }
 
-    .section-body li {
-      margin-bottom: 5px;
-    }
+    .section-body li { margin-bottom: 5px; }
 
     /* ── Raw fallback ── */
     .raw-feedback {
@@ -431,16 +395,6 @@
 
 <main>
 
-  <!-- API Key -->
-  <div class="card">
-    <div class="card-title">🔑 Anthropic API Key</div>
-    <div class="api-row">
-      <label for="api-key">API Key</label>
-      <input type="password" id="api-key" placeholder="sk-ant-api03-…" autocomplete="off" />
-    </div>
-    <p class="api-hint">Your key is used only in this browser session and never stored or transmitted anywhere except directly to api.anthropic.com.</p>
-  </div>
-
   <!-- Upload -->
   <div class="card">
     <div class="card-title">🎬 Upload Your Swing Video</div>
@@ -461,7 +415,7 @@
   <div class="card" id="frames-section">
     <div class="card-title">🖼 Extracted Frames</div>
     <div class="frames-grid" id="frames-grid"></div>
-    <p class="api-hint" style="margin-top:10px;" id="frames-hint"></p>
+    <p class="hint" style="margin-top:10px;" id="frames-hint"></p>
   </div>
 
   <!-- Analyze button -->
@@ -472,7 +426,7 @@
     <div class="spinner-wrap">
       <div class="spinner"></div>
       <div class="spinner-label">Analyzing your swing…</div>
-      <div class="spinner-sub">Sending frames to Claude · this may take 15–30 seconds</div>
+      <div class="spinner-sub">Claude is reviewing your frames · this may take 15–30 seconds</div>
     </div>
   </div>
 
@@ -488,67 +442,47 @@
 
 </main>
 
-<footer>Golf Swing Analyzer · Powered by Claude claude-sonnet-4-20250514 · All analysis stays in your browser</footer>
+<footer>Golf Swing Analyzer · Powered by Claude · Analysis is processed server-side</footer>
 
 <!-- Hidden canvas for frame extraction -->
 <canvas id="extractor" style="display:none;"></canvas>
 
 <script>
 /* ─── Constants ─── */
-const NUM_FRAMES   = 8;   // frames sent to Claude
-const FRAME_WIDTH  = 640; // max width per frame
+const NUM_FRAMES   = 8;
+const FRAME_WIDTH  = 640;
 const JPEG_QUALITY = 0.82;
 
 const SECTIONS = [
-  { key: 'stance',       label: 'Stance & Setup',    icon: '🦶' },
-  { key: 'grip',         label: 'Grip',               icon: '✋' },
-  { key: 'backswing',    label: 'Backswing',          icon: '🔄' },
-  { key: 'downswing',    label: 'Downswing',          icon: '⬇️' },
-  { key: 'impact',       label: 'Impact Position',   icon: '💥' },
-  { key: 'follow',       label: 'Follow-Through',    icon: '🏌️' },
+  { key: 'stance',    label: 'Stance & Setup',   icon: '🦶' },
+  { key: 'grip',      label: 'Grip',              icon: '✋' },
+  { key: 'backswing', label: 'Backswing',         icon: '🔄' },
+  { key: 'downswing', label: 'Downswing',         icon: '⬇️' },
+  { key: 'impact',    label: 'Impact Position',  icon: '💥' },
+  { key: 'follow',    label: 'Follow-Through',   icon: '🏌️' },
 ];
 
-const PROMPT = `You are an expert PGA-level golf coach reviewing a sequence of ${NUM_FRAMES} frames extracted from a golfer's swing video.
-
-Analyze the swing carefully and return your response in the following JSON structure (and ONLY this JSON — no markdown fences, no extra text):
-
-{
-  "summary": "One or two sentence overall impression of the swing.",
-  "sections": {
-    "stance":    { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] },
-    "grip":      { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] },
-    "backswing": { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] },
-    "downswing": { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] },
-    "impact":    { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] },
-    "follow":    { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] }
-  }
-}
-
-Be specific and actionable. Reference what you can actually observe in the frames. If a phase isn't clearly visible, say so and give general guidance.`;
-
 /* ─── State ─── */
-let videoFile   = null;
-let frameBlobs  = [];   // array of base64 data-URLs
+let frameBlobs = [];
 
 /* ─── DOM refs ─── */
-const fileInput      = document.getElementById('file-input');
-const uploadZone     = document.getElementById('upload-zone');
-const videoPreview   = document.getElementById('video-preview');
+const fileInput        = document.getElementById('file-input');
+const uploadZone       = document.getElementById('upload-zone');
+const videoPreview     = document.getElementById('video-preview');
 const videoPreviewWrap = document.getElementById('video-preview-wrap');
-const videoMeta      = document.getElementById('video-meta');
-const framesSection  = document.getElementById('frames-section');
-const framesGrid     = document.getElementById('frames-grid');
-const framesHint     = document.getElementById('frames-hint');
-const analyzeBtn     = document.getElementById('analyze-btn');
-const loadingSection = document.getElementById('loading-section');
-const resultsSection = document.getElementById('results-section');
-const errorBox       = document.getElementById('error-box');
-const feedbackOutput = document.getElementById('feedback-output');
-const scoreBbarWrap  = document.getElementById('score-bar-wrap');
-const extractor      = document.getElementById('extractor');
-const apiKeyInput    = document.getElementById('api-key');
+const videoMeta        = document.getElementById('video-meta');
+const framesSection    = document.getElementById('frames-section');
+const framesGrid       = document.getElementById('frames-grid');
+const framesHint       = document.getElementById('frames-hint');
+const analyzeBtn       = document.getElementById('analyze-btn');
+const loadingSection   = document.getElementById('loading-section');
+const resultsSection   = document.getElementById('results-section');
+const errorBox         = document.getElementById('error-box');
+const feedbackOutput   = document.getElementById('feedback-output');
+const scoreBbarWrap    = document.getElementById('score-bar-wrap');
+const extractor        = document.getElementById('extractor');
 
-/* ─── Drag-and-drop styling ─── */
+/* ─── Drag-and-drop ─── */
 uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
 uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
 uploadZone.addEventListener('drop', e => {
@@ -557,22 +491,15 @@ uploadZone.addEventListener('drop', e => {
   const f = e.dataTransfer.files[0];
   if (f && f.type.startsWith('video/')) handleFile(f);
 });
-
-fileInput.addEventListener('change', () => {
-  if (fileInput.files[0]) handleFile(fileInput.files[0]);
-});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
 
 /* ─── File handling ─── */
 function handleFile(file) {
-  videoFile = file;
   hideError();
   resultsSection.style.display = 'none';
-
-  const url = URL.createObjectURL(file);
-  videoPreview.src = url;
+  videoPreview.src = URL.createObjectURL(file);
   videoPreviewWrap.style.display = 'block';
   videoMeta.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB`;
-
   videoPreview.onloadedmetadata = () => {
     const dur = videoPreview.duration;
     videoMeta.textContent += ` · ${Math.round(dur)}s`;
@@ -586,7 +513,6 @@ function seekTo(video, time) {
     const done = () => { video.removeEventListener('seeked', done); resolve(); };
     video.addEventListener('seeked', done);
     video.currentTime = time;
-    // Fallback: resolve after 2 s in case seeked never fires
     setTimeout(done, 2000);
   });
 }
@@ -597,28 +523,25 @@ async function extractFrames(video, duration) {
   framesSection.style.display = 'none';
   analyzeBtn.style.display = 'none';
 
-  const times = [];
-  for (let i = 0; i < NUM_FRAMES; i++) {
-    times.push(duration * (0.03 + (0.94 * i / (NUM_FRAMES - 1))));
-  }
+  const times = Array.from({ length: NUM_FRAMES }, (_, i) =>
+    duration * (0.03 + (0.94 * i / (NUM_FRAMES - 1)))
+  );
 
   const ctx = extractor.getContext('2d');
   const aspect = video.videoHeight / video.videoWidth;
   const w = Math.min(video.videoWidth, FRAME_WIDTH);
   const h = Math.round(w * aspect);
-  extractor.width  = w;
+  extractor.width = w;
   extractor.height = h;
 
   for (const t of times) {
     await seekTo(video, t);
     ctx.drawImage(video, 0, 0, w, h);
-
-    const dataURL = extractor.toDataURL('image/jpeg', JPEG_QUALITY);
-    frameBlobs.push(dataURL);
+    frameBlobs.push(extractor.toDataURL('image/jpeg', JPEG_QUALITY));
 
     const thumb = document.createElement('canvas');
     const thumbH = Math.round(90 * aspect);
-    thumb.width  = 90;
+    thumb.width = 90;
     thumb.height = thumbH;
     thumb.getContext('2d').drawImage(extractor, 0, 0, 90, thumbH);
     framesGrid.appendChild(thumb);
@@ -631,8 +554,6 @@ async function extractFrames(video, duration) {
 
 /* ─── Analyze ─── */
 analyzeBtn.addEventListener('click', async () => {
-  const apiKey = apiKeyInput.value.trim();
-  if (!apiKey) { showError('Please enter your Anthropic API key first.'); return; }
   if (!frameBlobs.length) { showError('No frames extracted yet. Please upload a video.'); return; }
 
   analyzeBtn.disabled = true;
@@ -641,7 +562,7 @@ analyzeBtn.addEventListener('click', async () => {
   hideError();
 
   try {
-    const result = await callClaude(apiKey, frameBlobs, PROMPT);
+    const result = await callAnalyze(frameBlobs);
     displayResults(result);
   } catch (err) {
     showError(`Analysis failed: ${err.message}`);
@@ -651,58 +572,27 @@ analyzeBtn.addEventListener('click', async () => {
   }
 });
 
-/* ─── Claude API call ─── */
-async function callClaude(apiKey, frames, prompt) {
-  const imageContent = frames.map(dataURL => {
-    const [header, b64] = dataURL.split(',');
-    const mediaType = header.includes('jpeg') ? 'image/jpeg' : 'image/png';
-    return {
-      type:   'image',
-      source: { type: 'base64', media_type: mediaType, data: b64 }
-    };
-  });
-
-  const body = {
-    model:      'claude-sonnet-4-20250514',
-    max_tokens: 2048,
-    messages: [
-      {
-        role:    'user',
-        content: [
-          ...imageContent,
-          { type: 'text', text: prompt }
-        ]
-      }
-    ]
-  };
-
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method:  'POST',
-    headers: {
-      'Content-Type':            'application/json',
-      'x-api-key':               apiKey,
-      'anthropic-version':       '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify(body)
+/* ─── API call (server-side proxy) ─── */
+async function callAnalyze(frames) {
+  const resp = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ frames }),
   });
 
   if (!resp.ok) {
-    let msg = `HTTP ${resp.status}`;
-    try { const j = await resp.json(); msg = j.error?.message || msg; } catch (_) {}
+    let msg = `Server error ${resp.status}`;
+    try { const j = await resp.json(); msg = j.error || msg; } catch (_) {}
     throw new Error(msg);
   }
 
   const data = await resp.json();
-  const raw  = data.content[0]?.text ?? '';
-  return raw;
+  return data.result ?? '';
 }
 
 /* ─── Render results ─── */
 function displayResults(rawText) {
   let parsed = null;
-
-  // Try to extract JSON even if Claude wrapped it in markdown
   const jsonMatch = rawText.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     try { parsed = JSON.parse(jsonMatch[0]); } catch (_) {}
@@ -713,15 +603,14 @@ function displayResults(rawText) {
   scoreBbarWrap.innerHTML  = '';
 
   if (!parsed) {
-    // Fallback: show raw text
     const pre = document.createElement('div');
     pre.className = 'raw-feedback';
     pre.textContent = rawText;
     feedbackOutput.appendChild(pre);
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
   }
 
-  // Summary bar
   if (parsed.summary) {
     const bar = document.createElement('div');
     bar.className = 'score-bar';
@@ -734,23 +623,19 @@ function displayResults(rawText) {
     scoreBbarWrap.appendChild(bar);
   }
 
-  // Per-section cards
   const wrap = document.createElement('div');
   wrap.className = 'feedback-sections';
 
   SECTIONS.forEach(({ key, label, icon }) => {
     const sec = parsed.sections?.[key];
     if (!sec) return;
-
     const rating = sec.rating || 'Average';
     const badgeClass =
       rating === 'Good'       ? 'badge-good'    :
       rating === 'Needs Work' ? 'badge-improve' : 'badge-average';
-
     const tipsHTML = (sec.tips || []).length
       ? `<ul>${sec.tips.map(t => `<li>${escHtml(t)}</li>`).join('')}</ul>`
       : '';
-
     const div = document.createElement('div');
     div.className = 'feedback-section';
     div.innerHTML = `
@@ -767,8 +652,6 @@ function displayResults(rawText) {
   });
 
   feedbackOutput.appendChild(wrap);
-
-  // Scroll into view
   resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -789,7 +672,7 @@ function showError(msg) {
 
 function hideError() {
   errorBox.style.display = 'none';
-  errorBox.textContent   = '';
+  errorBox.textContent = '';
 }
 </script>
 </body>
