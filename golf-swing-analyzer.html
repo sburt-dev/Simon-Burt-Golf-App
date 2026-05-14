@@ -452,7 +452,7 @@
     </div>
 
     <div id="video-preview-wrap">
-      <video id="video-preview" controls></video>
+      <video id="video-preview" controls preload="auto"></video>
       <p class="video-meta" id="video-meta"></p>
     </div>
   </div>
@@ -581,57 +581,49 @@ function handleFile(file) {
 }
 
 /* ─── Frame extraction ─── */
-function extractFrames(video, duration) {
+function seekTo(video, time) {
+  return new Promise(resolve => {
+    const done = () => { video.removeEventListener('seeked', done); resolve(); };
+    video.addEventListener('seeked', done);
+    video.currentTime = time;
+    // Fallback: resolve after 2 s in case seeked never fires
+    setTimeout(done, 2000);
+  });
+}
+
+async function extractFrames(video, duration) {
   framesGrid.innerHTML = '';
   frameBlobs = [];
   framesSection.style.display = 'none';
   analyzeBtn.style.display = 'none';
 
   const times = [];
-  // Spread frames across the swing, skipping first/last 3% to avoid dead frames
   for (let i = 0; i < NUM_FRAMES; i++) {
     times.push(duration * (0.03 + (0.94 * i / (NUM_FRAMES - 1))));
   }
 
-  let idx = 0;
+  const ctx = extractor.getContext('2d');
+  const aspect = video.videoHeight / video.videoWidth;
+  const w = Math.min(video.videoWidth, FRAME_WIDTH);
+  const h = Math.round(w * aspect);
+  extractor.width  = w;
+  extractor.height = h;
 
-  function seekNext() {
-    if (idx >= times.length) {
-      finishExtraction();
-      return;
-    }
-    video.currentTime = times[idx];
-  }
-
-  video.onseeked = () => {
-    const ctx = extractor.getContext('2d');
-    const aspect = video.videoHeight / video.videoWidth;
-    const w = Math.min(video.videoWidth, FRAME_WIDTH);
-    const h = Math.round(w * aspect);
-    extractor.width  = w;
-    extractor.height = h;
+  for (const t of times) {
+    await seekTo(video, t);
     ctx.drawImage(video, 0, 0, w, h);
 
     const dataURL = extractor.toDataURL('image/jpeg', JPEG_QUALITY);
     frameBlobs.push(dataURL);
 
-    // Thumbnail
     const thumb = document.createElement('canvas');
     const thumbH = Math.round(90 * aspect);
     thumb.width  = 90;
     thumb.height = thumbH;
     thumb.getContext('2d').drawImage(extractor, 0, 0, 90, thumbH);
     framesGrid.appendChild(thumb);
+  }
 
-    idx++;
-    seekNext();
-  };
-
-  seekNext();
-}
-
-function finishExtraction() {
-  video.onseeked = null;
   framesSection.style.display = 'block';
   framesHint.textContent = `${frameBlobs.length} frames extracted and ready for analysis.`;
   analyzeBtn.style.display = 'block';
