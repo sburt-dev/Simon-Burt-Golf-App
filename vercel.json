@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "buildCommand": "echo 'no build step'",
+  "outputDirectory": "public",
+  "installCommand": "",
   "functions": {
     "api/analyze.js": {
       "maxDuration": 30
