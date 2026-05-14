@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golf Swing Analyzer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-dark:   #1a3a2a;
+      --green-mid:    #2d6a4f;
+      --green-light:  #52b788;
+      --green-pale:   #d8f3dc;
+      --accent:       #b7e4c7;
+      --white:        #ffffff;
+      --text-dark:    #1b2e1e;
+      --text-mid:     #345240;
+      --border:       #a8d5ba;
+      --shadow:       rgba(29, 58, 38, 0.18);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(160deg, var(--green-dark) 0%, #0f2318 100%);
+      min-height: 100vh;
+      color: var(--text-dark);
+    }
+
+    /* ── Header ── */
+    header {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--green-light), var(--green-mid));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 2px 12px rgba(82,183,136,0.4);
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      font-size: 0.82rem;
+      color: var(--accent);
+      margin-top: 1px;
+    }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 36px 20px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 28px 32px;
+      box-shadow: 0 4px 24px var(--shadow);
+    }
+
+    .card-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--green-mid);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── API key ── */
+    .api-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .api-row label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-mid);
+      white-space: nowrap;
+    }
+
+    .api-row input {
+      flex: 1;
+      min-width: 220px;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: 'Courier New', monospace;
+      color: var(--text-dark);
+      background: #f8fdf9;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .api-row input:focus {
+      border-color: var(--green-light);
+      box-shadow: 0 0 0 3px rgba(82,183,136,0.15);
+    }
+
+    .api-hint {
+      font-size: 0.76rem;
+      color: #7aab8f;
+      margin-top: 6px;
+    }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      background: #f4fcf6;
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--green-light);
+      background: var(--green-pale);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%; height: 100%;
+    }
+
+    .upload-icon {
+      font-size: 2.6rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .upload-zone h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-dark);
+    }
+
+    .upload-zone p {
+      font-size: 0.83rem;
+      color: #6b9278;
+      margin-top: 4px;
+    }
+
+    /* ── Video preview ── */
+    #video-preview-wrap {
+      display: none;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    #video-preview {
+      max-width: 100%;
+      max-height: 360px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px var(--shadow);
+      background: #000;
+    }
+
+    .video-meta {
+      font-size: 0.82rem;
+      color: var(--text-mid);
+      margin-top: 8px;
+    }
+
+    /* ── Frame strip ── */
+    #frames-section { display: none; }
+
+    .frames-grid {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .frames-grid canvas {
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      height: 90px;
+      width: auto;
+    }
+
+    /* ── Analyze button ── */
+    #analyze-btn {
+      display: none;
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: opacity 0.2s, transform 0.1s;
+      box-shadow: 0 4px 16px rgba(45,106,79,0.5);
+    }
+
+    #analyze-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+    #analyze-btn:active { transform: translateY(0); }
+    #analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Spinner ── */
+    #loading-section {
+      display: none;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .spinner-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 52px; height: 52px;
+      border: 5px solid var(--green-pale);
+      border-top-color: var(--green-light);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-mid);
+    }
+
+    .spinner-sub {
+      font-size: 0.78rem;
+      color: #8ab89a;
+      margin-top: -8px;
+    }
+
+    /* ── Results ── */
+    #results-section { display: none; }
+
+    .score-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: linear-gradient(135deg, var(--green-pale), #c3ead0);
+      border-radius: 12px;
+      padding: 18px 22px;
+      margin-bottom: 24px;
+    }
+
+    .score-circle {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 3px 12px rgba(45,106,79,0.4);
+    }
+
+    .score-circle span {
+      font-size: 1.4rem;
+      color: var(--white);
+    }
+
+    .score-text h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+
+    .score-text p {
+      font-size: 0.83rem;
+      color: var(--text-mid);
+      margin-top: 2px;
+    }
+
+    /* ── Feedback sections ── */
+    .feedback-sections {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .feedback-section {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: #f4fcf6;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: var(--green-mid);
+      color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .section-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-dark);
+      flex: 1;
+    }
+
+    .section-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-good    { background: #c7f0d8; color: #1a5c36; }
+    .badge-average { background: #fff3cd; color: #856404; }
+    .badge-improve { background: #fde8e8; color: #842029; }
+
+    .section-body {
+      padding: 16px 18px;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: #2c4a35;
+    }
+
+    .section-body ul {
+      padding-left: 20px;
+      margin-top: 6px;
+    }
+
+    .section-body li {
+      margin-bottom: 5px;
+    }
+
+    /* ── Raw fallback ── */
+    .raw-feedback {
+      font-size: 0.9rem;
+      line-height: 1.75;
+      color: var(--text-dark);
+      white-space: pre-wrap;
+    }
+
+    /* ── Error ── */
+    .error-box {
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      border-radius: 10px;
+      padding: 16px 20px;
+      color: #991b1b;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      color: rgba(255,255,255,0.25);
+      font-size: 0.76rem;
+      padding: 0 20px 32px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 560px) {
+      .card { padding: 20px 18px; }
+      header { padding: 14px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">⛳</div>
+  <div>
+    <h1>Golf Swing Analyzer</h1>
+    <p>AI-powered swing analysis using Claude Vision</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- API Key -->
+  <div class="card">
+    <div class="card-title">🔑 Anthropic API Key</div>
+    <div class="api-row">
+      <label for="api-key">API Key</label>
+      <input type="password" id="api-key" placeholder="sk-ant-api03-…" autocomplete="off" />
+    </div>
+    <p class="api-hint">Your key is used only in this browser session and never stored or transmitted anywhere except directly to api.anthropic.com.</p>
+  </div>
+
+  <!-- Upload -->
+  <div class="card">
+    <div class="card-title">🎬 Upload Your Swing Video</div>
+    <div class="upload-zone" id="upload-zone">
+      <input type="file" id="file-input" accept="video/*" />
+      <span class="upload-icon">📹</span>
+      <h3>Drop your video here or click to browse</h3>
+      <p>MP4, MOV, AVI, WebM · Max recommended: 2 minutes</p>
+    </div>
+
+    <div id="video-preview-wrap">
+      <video id="video-preview" controls></video>
+      <p class="video-meta" id="video-meta"></p>
+    </div>
+  </div>
+
+  <!-- Extracted frames -->
+  <div class="card" id="frames-section">
+    <div class="card-title">🖼 Extracted Frames</div>
+    <div class="frames-grid" id="frames-grid"></div>
+    <p class="api-hint" style="margin-top:10px;" id="frames-hint"></p>
+  </div>
+
+  <!-- Analyze button -->
+  <button id="analyze-btn">⛳ Analyze My Swing</button>
+
+  <!-- Loading -->
+  <div class="card" id="loading-section">
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <div class="spinner-label">Analyzing your swing…</div>
+      <div class="spinner-sub">Sending frames to Claude · this may take 15–30 seconds</div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="error-box"></div>
+
+  <!-- Results -->
+  <div class="card" id="results-section">
+    <div class="card-title">📋 Swing Analysis Report</div>
+    <div id="score-bar-wrap"></div>
+    <div id="feedback-output"></div>
+  </div>
+
+</main>
+
+<footer>Golf Swing Analyzer · Powered by Claude claude-sonnet-4-20250514 · All analysis stays in your browser</footer>
+
+<!-- Hidden canvas for frame extraction -->
+<canvas id="extractor" style="display:none;"></canvas>
+
+<script>
+/* ─── Constants ─── */
+const NUM_FRAMES   = 8;   // frames sent to Claude
+const FRAME_WIDTH  = 640; // max width per frame
+const JPEG_QUALITY = 0.82;
+
+const SECTIONS = [
+  { key: 'stance',       label: 'Stance & Setup',    icon: '🦶' },
+  { key: 'grip',         label: 'Grip',               icon: '✋' },
+  { key: 'backswing',    label: 'Backswing',          icon: '🔄' },
+  { key: 'downswing',    label: 'Downswing',          icon: '⬇️' },
+  { key: 'impact',       label: 'Impact Position',   icon: '💥' },
+  { key: 'follow',       label: 'Follow-Through',    icon: '🏌️' },
+];
+
+const PROMPT = `You are an expert PGA-level golf coach reviewing a sequence of ${NUM_FRAMES} frames extracted from a golfer's swing video.
+
+Analyze the swing carefully and return your response in the following JSON structure (and ONLY this JSON — no markdown fences, no extra text):
+
+{
+  "summary": "One or two sentence overall impression of the swing.",
+  "sections": {
+    "stance":    { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] },
+    "grip":      { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] },
+    "backswing": { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] },
+    "downswing": { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] },
+    "impact":    { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] },
+    "follow":    { "rating": "Good|Average|Needs Work", "feedback": "detailed paragraph", "tips": ["tip1","tip2"] }
+  }
+}
+
+Be specific and actionable. Reference what you can actually observe in the frames. If a phase isn't clearly visible, say so and give general guidance.`;
+
+/* ─── State ─── */
+let videoFile   = null;
+let frameBlobs  = [];   // array of base64 data-URLs
+
+/* ─── DOM refs ─── */
+const fileInput      = document.getElementById('file-input');
+const uploadZone     = document.getElementById('upload-zone');
+const videoPreview   = document.getElementById('video-preview');
+const videoPreviewWrap = document.getElementById('video-preview-wrap');
+const videoMeta      = document.getElementById('video-meta');
+const framesSection  = document.getElementById('frames-section');
+const framesGrid     = document.getElementById('frames-grid');
+const framesHint     = document.getElementById('frames-hint');
+const analyzeBtn     = document.getElementById('analyze-btn');
+const loadingSection = document.getElementById('loading-section');
+const resultsSection = document.getElementById('results-section');
+const errorBox       = document.getElementById('error-box');
+const feedbackOutput = document.getElementById('feedback-output');
+const scoreBbarWrap  = document.getElementById('score-bar-wrap');
+const extractor      = document.getElementById('extractor');
+const apiKeyInput    = document.getElementById('api-key');
+
+/* ─── Drag-and-drop styling ─── */
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('video/')) handleFile(f);
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+
+/* ─── File handling ─── */
+function handleFile(file) {
+  videoFile = file;
+  hideError();
+  resultsSection.style.display = 'none';
+
+  const url = URL.createObjectURL(file);
+  videoPreview.src = url;
+  videoPreviewWrap.style.display = 'block';
+  videoMeta.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB`;
+
+  videoPreview.onloadedmetadata = () => {
+    const dur = videoPreview.duration;
+    videoMeta.textContent += ` · ${Math.round(dur)}s`;
+    extractFrames(videoPreview, dur);
+  };
+}
+
+/* ─── Frame extraction ─── */
+function extractFrames(video, duration) {
+  framesGrid.innerHTML = '';
+  frameBlobs = [];
+  framesSection.style.display = 'none';
+  analyzeBtn.style.display = 'none';
+
+  const times = [];
+  // Spread frames across the swing, skipping first/last 3% to avoid dead frames
+  for (let i = 0; i < NUM_FRAMES; i++) {
+    times.push(duration * (0.03 + (0.94 * i / (NUM_FRAMES - 1))));
+  }
+
+  let idx = 0;
+
+  function seekNext() {
+    if (idx >= times.length) {
+      finishExtraction();
+      return;
+    }
+    video.currentTime = times[idx];
+  }
+
+  video.onseeked = () => {
+    const ctx = extractor.getContext('2d');
+    const aspect = video.videoHeight / video.videoWidth;
+    const w = Math.min(video.videoWidth, FRAME_WIDTH);
+    const h = Math.round(w * aspect);
+    extractor.width  = w;
+    extractor.height = h;
+    ctx.drawImage(video, 0, 0, w, h);
+
+    const dataURL = extractor.toDataURL('image/jpeg', JPEG_QUALITY);
+    frameBlobs.push(dataURL);
+
+    // Thumbnail
+    const thumb = document.createElement('canvas');
+    const thumbH = Math.round(90 * aspect);
+    thumb.width  = 90;
+    thumb.height = thumbH;
+    thumb.getContext('2d').drawImage(extractor, 0, 0, 90, thumbH);
+    framesGrid.appendChild(thumb);
+
+    idx++;
+    seekNext();
+  };
+
+  seekNext();
+}
+
+function finishExtraction() {
+  video.onseeked = null;
+  framesSection.style.display = 'block';
+  framesHint.textContent = `${frameBlobs.length} frames extracted and ready for analysis.`;
+  analyzeBtn.style.display = 'block';
+}
+
+/* ─── Analyze ─── */
+analyzeBtn.addEventListener('click', async () => {
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) { showError('Please enter your Anthropic API key first.'); return; }
+  if (!frameBlobs.length) { showError('No frames extracted yet. Please upload a video.'); return; }
+
+  analyzeBtn.disabled = true;
+  loadingSection.style.display = 'block';
+  resultsSection.style.display = 'none';
+  hideError();
+
+  try {
+    const result = await callClaude(apiKey, frameBlobs, PROMPT);
+    displayResults(result);
+  } catch (err) {
+    showError(`Analysis failed: ${err.message}`);
+  } finally {
+    loadingSection.style.display = 'none';
+    analyzeBtn.disabled = false;
+  }
+});
+
+/* ─── Claude API call ─── */
+async function callClaude(apiKey, frames, prompt) {
+  const imageContent = frames.map(dataURL => {
+    const [header, b64] = dataURL.split(',');
+    const mediaType = header.includes('jpeg') ? 'image/jpeg' : 'image/png';
+    return {
+      type:   'image',
+      source: { type: 'base64', media_type: mediaType, data: b64 }
+    };
+  });
+
+  const body = {
+    model:      'claude-sonnet-4-20250514',
+    max_tokens: 2048,
+    messages: [
+      {
+        role:    'user',
+        content: [
+          ...imageContent,
+          { type: 'text', text: prompt }
+        ]
+      }
+    ]
+  };
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method:  'POST',
+    headers: {
+      'Content-Type':            'application/json',
+      'x-api-key':               apiKey,
+      'anthropic-version':       '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!resp.ok) {
+    let msg = `HTTP ${resp.status}`;
+    try { const j = await resp.json(); msg = j.error?.message || msg; } catch (_) {}
+    throw new Error(msg);
+  }
+
+  const data = await resp.json();
+  const raw  = data.content[0]?.text ?? '';
+  return raw;
+}
+
+/* ─── Render results ─── */
+function displayResults(rawText) {
+  let parsed = null;
+
+  // Try to extract JSON even if Claude wrapped it in markdown
+  const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try { parsed = JSON.parse(jsonMatch[0]); } catch (_) {}
+  }
+
+  resultsSection.style.display = 'block';
+  feedbackOutput.innerHTML = '';
+  scoreBbarWrap.innerHTML  = '';
+
+  if (!parsed) {
+    // Fallback: show raw text
+    const pre = document.createElement('div');
+    pre.className = 'raw-feedback';
+    pre.textContent = rawText;
+    feedbackOutput.appendChild(pre);
+    return;
+  }
+
+  // Summary bar
+  if (parsed.summary) {
+    const bar = document.createElement('div');
+    bar.className = 'score-bar';
+    bar.innerHTML = `
+      <div class="score-circle"><span>🏌️</span></div>
+      <div class="score-text">
+        <h2>Overall Assessment</h2>
+        <p>${escHtml(parsed.summary)}</p>
+      </div>`;
+    scoreBbarWrap.appendChild(bar);
+  }
+
+  // Per-section cards
+  const wrap = document.createElement('div');
+  wrap.className = 'feedback-sections';
+
+  SECTIONS.forEach(({ key, label, icon }) => {
+    const sec = parsed.sections?.[key];
+    if (!sec) return;
+
+    const rating = sec.rating || 'Average';
+    const badgeClass =
+      rating === 'Good'       ? 'badge-good'    :
+      rating === 'Needs Work' ? 'badge-improve' : 'badge-average';
+
+    const tipsHTML = (sec.tips || []).length
+      ? `<ul>${sec.tips.map(t => `<li>${escHtml(t)}</li>`).join('')}</ul>`
+      : '';
+
+    const div = document.createElement('div');
+    div.className = 'feedback-section';
+    div.innerHTML = `
+      <div class="section-header">
+        <div class="section-icon">${icon}</div>
+        <span class="section-name">${label}</span>
+        <span class="section-badge ${badgeClass}">${escHtml(rating)}</span>
+      </div>
+      <div class="section-body">
+        <p>${escHtml(sec.feedback || '')}</p>
+        ${tipsHTML}
+      </div>`;
+    wrap.appendChild(div);
+  });
+
+  feedbackOutput.appendChild(wrap);
+
+  // Scroll into view
+  resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ─── Helpers ─── */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function showError(msg) {
+  errorBox.textContent = msg;
+  errorBox.style.display = 'block';
+  errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function hideError() {
+  errorBox.style.display = 'none';
+  errorBox.textContent   = '';
+}
+</script>
+</body>
+</html>
