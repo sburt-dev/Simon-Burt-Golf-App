@@ -8,16 +8,19 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --green-dark:   #1a3a2a;
-      --green-mid:    #2d6a4f;
-      --green-light:  #52b788;
-      --green-pale:   #d8f3dc;
-      --accent:       #b7e4c7;
-      --white:        #ffffff;
-      --text-dark:    #1b2e1e;
-      --text-mid:     #345240;
-      --border:       #a8d5ba;
-      --shadow:       rgba(29, 58, 38, 0.18);
+      --green-dark:  #1a3a2a;
+      --green-mid:   #2d6a4f;
+      --green-light: #52b788;
+      --green-pale:  #d8f3dc;
+      --accent:      #b7e4c7;
+      --white:       #ffffff;
+      --text-dark:   #1b2e1e;
+      --text-mid:    #345240;
+      --border:      #a8d5ba;
+      --shadow:      rgba(29, 58, 38, 0.18);
+      --amber:       #92400e;
+      --amber-bg:    #fffbeb;
+      --amber-border:#fcd34d;
     }
 
     body {
@@ -27,7 +30,6 @@
       color: var(--text-dark);
     }
 
-    /* ── Header ── */
     header {
       background: rgba(255,255,255,0.04);
       backdrop-filter: blur(8px);
@@ -45,24 +47,14 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 22px;
       box-shadow: 0 2px 12px rgba(82,183,136,0.4);
+      flex-shrink: 0;
     }
 
-    header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--white);
-      letter-spacing: -0.02em;
-    }
+    header h1 { font-size: 1.5rem; font-weight: 700; color: var(--white); letter-spacing: -0.02em; }
+    header p  { font-size: 0.82rem; color: var(--accent); margin-top: 1px; }
 
-    header p {
-      font-size: 0.82rem;
-      color: var(--accent);
-      margin-top: 1px;
-    }
-
-    /* ── Main layout ── */
     main {
-      max-width: 920px;
+      max-width: 960px;
       margin: 0 auto;
       padding: 36px 20px 60px;
       display: flex;
@@ -70,7 +62,6 @@
       gap: 24px;
     }
 
-    /* ── Cards ── */
     .card {
       background: var(--white);
       border-radius: 16px;
@@ -89,21 +80,11 @@
       align-items: center;
       gap: 8px;
     }
+    .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    .card-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
+    .hint { font-size: 0.76rem; color: #7aab8f; margin-top: 6px; }
 
-    .hint {
-      font-size: 0.76rem;
-      color: #7aab8f;
-      margin-top: 6px;
-    }
-
-    /* ── Upload zone ── */
+    /* ── Upload ── */
     .upload-zone {
       border: 2px dashed var(--border);
       border-radius: 12px;
@@ -114,113 +95,87 @@
       transition: border-color 0.2s, background 0.2s;
       position: relative;
     }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--green-light); background: var(--green-pale); }
+    .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-icon { font-size: 2.6rem; margin-bottom: 10px; display: block; }
+    .upload-zone h3 { font-size: 1.05rem; font-weight: 600; color: var(--text-dark); }
+    .upload-zone p  { font-size: 0.83rem; color: #6b9278; margin-top: 4px; }
 
-    .upload-zone:hover,
-    .upload-zone.drag-over {
-      border-color: var(--green-light);
-      background: var(--green-pale);
+    /* ── Video preview ── */
+    #video-preview-wrap { display: none; margin-top: 20px; text-align: center; }
+    #video-preview { max-width: 100%; max-height: 360px; border-radius: 10px; box-shadow: 0 4px 16px var(--shadow); background: #000; }
+    .video-meta { font-size: 0.82rem; color: var(--text-mid); margin-top: 8px; }
+
+    /* ── Frames ── */
+    #frames-section { display: none; }
+
+    .frames-scroll {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 8px;
     }
 
-    .upload-zone input[type="file"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-      width: 100%; height: 100%;
+    .frame-thumb-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
     }
 
-    .upload-icon {
-      font-size: 2.6rem;
-      margin-bottom: 10px;
+    .frame-thumb-wrap canvas {
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      height: 80px;
+      width: auto;
       display: block;
     }
 
-    .upload-zone h3 {
-      font-size: 1.05rem;
+    .frame-thumb-wrap canvas.current-frame {
+      border-color: var(--green-light);
+      box-shadow: 0 0 0 2px rgba(82,183,136,0.3);
+    }
+
+    .frame-label {
+      font-size: 0.65rem;
       font-weight: 600;
-      color: var(--text-dark);
-    }
-
-    .upload-zone p {
-      font-size: 0.83rem;
-      color: #6b9278;
-      margin-top: 4px;
-    }
-
-    /* ── Video preview ── */
-    #video-preview-wrap {
-      display: none;
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    #video-preview {
-      max-width: 100%;
-      max-height: 360px;
-      border-radius: 10px;
-      box-shadow: 0 4px 16px var(--shadow);
-      background: #000;
-    }
-
-    .video-meta {
-      font-size: 0.82rem;
       color: var(--text-mid);
-      margin-top: 8px;
+      text-align: center;
+      max-width: 72px;
+      line-height: 1.25;
     }
 
-    /* ── Frame strip ── */
-    #frames-section { display: none; }
-
-    .frames-grid {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 6px;
-    }
-
-    .frames-grid canvas {
-      border-radius: 6px;
-      border: 2px solid var(--border);
-      flex-shrink: 0;
-      height: 90px;
-      width: auto;
+    .extraction-progress {
+      font-size: 0.8rem;
+      color: var(--green-mid);
+      font-weight: 600;
+      margin-top: 10px;
     }
 
     /* ── Analyze button ── */
     #analyze-btn {
       display: none;
       width: 100%;
-      padding: 15px;
+      padding: 16px;
       background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
       color: var(--white);
       border: none;
       border-radius: 12px;
-      font-size: 1.05rem;
+      font-size: 1.1rem;
       font-weight: 700;
       cursor: pointer;
       letter-spacing: 0.03em;
       transition: opacity 0.2s, transform 0.1s;
       box-shadow: 0 4px 16px rgba(45,106,79,0.5);
     }
-
-    #analyze-btn:hover { opacity: 0.92; transform: translateY(-1px); }
-    #analyze-btn:active { transform: translateY(0); }
+    #analyze-btn:hover   { opacity: 0.92; transform: translateY(-1px); }
+    #analyze-btn:active  { transform: translateY(0); }
     #analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     /* ── Spinner ── */
-    #loading-section {
-      display: none;
-      text-align: center;
-      padding: 20px 0;
-    }
-
-    .spinner-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
-
+    #loading-section { display: none; text-align: center; padding: 20px 0; }
+    .spinner-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .spinner {
       width: 52px; height: 52px;
       border: 5px solid var(--green-pale);
@@ -228,83 +183,114 @@
       border-radius: 50%;
       animation: spin 0.9s linear infinite;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .spinner-label {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-mid);
-    }
-
-    .spinner-sub {
-      font-size: 0.78rem;
-      color: #8ab89a;
-      margin-top: -8px;
-    }
+    .spinner-label { font-size: 0.95rem; font-weight: 600; color: var(--text-mid); }
+    .spinner-sub   { font-size: 0.78rem; color: #8ab89a; margin-top: -8px; }
 
     /* ── Results ── */
     #results-section { display: none; }
 
-    .score-bar {
+    /* Summary bar */
+    .summary-bar {
       display: flex;
-      align-items: center;
-      gap: 14px;
+      align-items: flex-start;
+      gap: 16px;
       background: linear-gradient(135deg, var(--green-pale), #c3ead0);
       border-radius: 12px;
-      padding: 18px 22px;
-      margin-bottom: 24px;
+      padding: 20px 22px;
+      margin-bottom: 16px;
     }
-
-    .score-circle {
-      width: 64px; height: 64px;
+    .summary-icon {
+      width: 52px; height: 52px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--green-mid), var(--green-dark));
       display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
       flex-shrink: 0;
       box-shadow: 0 3px 12px rgba(45,106,79,0.4);
     }
+    .summary-text h2 { font-size: 1.1rem; font-weight: 700; color: var(--green-dark); }
+    .summary-text p  { font-size: 0.88rem; color: var(--text-mid); margin-top: 4px; line-height: 1.6; }
 
-    .score-circle span {
-      font-size: 1.4rem;
-      color: var(--white);
-    }
-
-    .score-text h2 {
-      font-size: 1.15rem;
+    /* Skill level badge */
+    .skill-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .skill-label { font-size: 0.78rem; color: var(--text-mid); font-weight: 600; }
+    .skill-badge {
+      font-size: 0.72rem;
       font-weight: 700;
-      color: var(--green-dark);
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
+    .skill-beginner     { background: #e0e7ff; color: #3730a3; }
+    .skill-intermediate { background: #fff3cd; color: #92400e; }
+    .skill-advanced     { background: #d1fae5; color: #065f46; }
+    .skill-competitive  { background: #fce7f3; color: #9d174d; }
 
-    .score-text p {
-      font-size: 0.83rem;
-      color: var(--text-mid);
-      margin-top: 2px;
-    }
-
-    /* ── Feedback sections ── */
-    .feedback-sections {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    .feedback-section {
-      border: 1px solid var(--border);
+    /* Strengths */
+    .strengths-panel {
+      background: #f0fdf4;
+      border: 1.5px solid #86efac;
       border-radius: 10px;
-      margin-bottom: 12px;
-      overflow: hidden;
+      padding: 16px 20px;
+      margin-bottom: 16px;
     }
+    .panel-heading {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #166534;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .strengths-panel ul { padding-left: 18px; }
+    .strengths-panel li { font-size: 0.88rem; color: #166534; line-height: 1.6; margin-bottom: 4px; }
+
+    /* Priority improvements */
+    .priorities-panel {
+      background: var(--amber-bg);
+      border: 1.5px solid var(--amber-border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    .priorities-panel .panel-heading { color: var(--amber); }
+    .priority-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .priority-item:last-child { margin-bottom: 0; }
+    .priority-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--amber);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .priority-text { font-size: 0.88rem; color: #78350f; line-height: 1.6; }
+
+    /* Section cards */
+    .feedback-sections { display: flex; flex-direction: column; gap: 0; }
+    .feedback-section  { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
 
     .section-header {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 14px 18px;
+      padding: 13px 18px;
       background: #f4fcf6;
       border-bottom: 1px solid var(--border);
     }
-
     .section-icon {
       width: 32px; height: 32px;
       border-radius: 8px;
@@ -314,50 +300,67 @@
       font-size: 15px;
       flex-shrink: 0;
     }
-
-    .section-name {
-      font-weight: 700;
-      font-size: 0.95rem;
-      color: var(--text-dark);
-      flex: 1;
-    }
-
+    .section-name  { font-weight: 700; font-size: 0.95rem; color: var(--text-dark); flex: 1; }
     .section-badge {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 3px 9px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 0.7rem; font-weight: 700;
+      padding: 3px 9px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: 0.05em;
     }
-
     .badge-good    { background: #c7f0d8; color: #1a5c36; }
     .badge-average { background: #fff3cd; color: #856404; }
     .badge-improve { background: #fde8e8; color: #842029; }
 
-    .section-body {
-      padding: 16px 18px;
-      font-size: 0.9rem;
-      line-height: 1.7;
-      color: #2c4a35;
+    .section-body { padding: 16px 18px; font-size: 0.9rem; line-height: 1.7; color: #2c4a35; }
+
+    .observations-box {
+      background: #f8fffe;
+      border-left: 3px solid var(--green-light);
+      border-radius: 0 6px 6px 0;
+      padding: 9px 14px;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: var(--text-mid);
+      font-style: italic;
+    }
+    .observations-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--green-mid);
+      margin-bottom: 3px;
+      font-style: normal;
     }
 
-    .section-body ul {
-      padding-left: 20px;
-      margin-top: 6px;
+    .section-body p { margin-bottom: 10px; }
+
+    .tips-list { padding-left: 20px; margin: 8px 0 12px; }
+    .tips-list li { margin-bottom: 6px; }
+
+    .drill-box {
+      background: #eef9f3;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      margin-top: 4px;
     }
-
-    .section-body li { margin-bottom: 5px; }
-
-    /* ── Raw fallback ── */
-    .raw-feedback {
-      font-size: 0.9rem;
-      line-height: 1.75;
-      color: var(--text-dark);
-      white-space: pre-wrap;
+    .drill-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--green-mid);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
+    .drill-text { font-size: 0.86rem; color: var(--text-dark); line-height: 1.55; }
 
-    /* ── Error ── */
+    /* Raw fallback */
+    .raw-feedback { font-size: 0.9rem; line-height: 1.75; color: var(--text-dark); white-space: pre-wrap; }
+
+    /* Error */
     .error-box {
       background: #fef2f2;
       border: 1.5px solid #fca5a5;
@@ -368,7 +371,6 @@
       display: none;
     }
 
-    /* ── Footer ── */
     footer {
       text-align: center;
       color: rgba(255,255,255,0.25);
@@ -376,7 +378,6 @@
       padding: 0 20px 32px;
     }
 
-    /* ── Responsive ── */
     @media (max-width: 560px) {
       .card { padding: 20px 18px; }
       header { padding: 14px 18px; }
@@ -389,7 +390,7 @@
   <div class="logo-icon">⛳</div>
   <div>
     <h1>Golf Swing Analyzer</h1>
-    <p>AI-powered swing analysis using Claude Vision</p>
+    <p>AI-powered coaching feedback from your swing video</p>
   </div>
 </header>
 
@@ -402,9 +403,8 @@
       <input type="file" id="file-input" accept="video/*" />
       <span class="upload-icon">📹</span>
       <h3>Drop your video here or click to browse</h3>
-      <p>MP4, MOV, AVI, WebM · Max recommended: 2 minutes</p>
+      <p>MP4, MOV, AVI, WebM · Film from face-on or down-the-line for best results</p>
     </div>
-
     <div id="video-preview-wrap">
       <video id="video-preview" controls preload="auto"></video>
       <p class="video-meta" id="video-meta"></p>
@@ -414,8 +414,9 @@
   <!-- Extracted frames -->
   <div class="card" id="frames-section">
     <div class="card-title">🖼 Extracted Frames</div>
-    <div class="frames-grid" id="frames-grid"></div>
-    <p class="hint" style="margin-top:10px;" id="frames-hint"></p>
+    <div class="frames-scroll" id="frames-grid"></div>
+    <p class="extraction-progress" id="extraction-progress"></p>
+    <p class="hint" style="margin-top:6px;" id="frames-hint"></p>
   </div>
 
   <!-- Analyze button -->
@@ -426,7 +427,7 @@
     <div class="spinner-wrap">
       <div class="spinner"></div>
       <div class="spinner-label">Analyzing your swing…</div>
-      <div class="spinner-sub">Claude is reviewing your frames · this may take 15–30 seconds</div>
+      <div class="spinner-sub">Claude is reviewing each frame · usually takes 15–30 seconds</div>
     </div>
   </div>
 
@@ -436,51 +437,62 @@
   <!-- Results -->
   <div class="card" id="results-section">
     <div class="card-title">📋 Swing Analysis Report</div>
-    <div id="score-bar-wrap"></div>
-    <div id="feedback-output"></div>
+    <div id="results-body"></div>
   </div>
 
 </main>
 
-<footer>Golf Swing Analyzer · Powered by Claude · Analysis is processed server-side</footer>
-
-<!-- Hidden canvas for frame extraction -->
+<footer>Golf Swing Analyzer · Powered by Claude · Analysis processed securely server-side</footer>
 <canvas id="extractor" style="display:none;"></canvas>
 
 <script>
-/* ─── Constants ─── */
-const NUM_FRAMES   = 8;
-const FRAME_WIDTH  = 640;
-const JPEG_QUALITY = 0.82;
+/* ─── Config ─── */
+const NUM_FRAMES   = 10;
+const FRAME_WIDTH  = 720;
+const JPEG_QUALITY = 0.85;
+
+// Labels sent to Claude so it knows which swing phase each frame likely shows
+const FRAME_LABELS = [
+  'Setup / Address',
+  'Takeaway (club starts back)',
+  'Early Backswing',
+  'Mid Backswing',
+  'Top of Backswing',
+  'Transition / Early Downswing',
+  'Mid Downswing',
+  'Pre-Impact / Impact Zone',
+  'Post-Impact',
+  'Follow-Through / Finish',
+];
 
 const SECTIONS = [
-  { key: 'stance',    label: 'Stance & Setup',   icon: '🦶' },
-  { key: 'grip',      label: 'Grip',              icon: '✋' },
-  { key: 'backswing', label: 'Backswing',         icon: '🔄' },
-  { key: 'downswing', label: 'Downswing',         icon: '⬇️' },
-  { key: 'impact',    label: 'Impact Position',  icon: '💥' },
-  { key: 'follow',    label: 'Follow-Through',   icon: '🏌️' },
+  { key: 'stance',    label: 'Stance & Setup',  icon: '🦶' },
+  { key: 'grip',      label: 'Grip',             icon: '✋' },
+  { key: 'backswing', label: 'Backswing',        icon: '🔄' },
+  { key: 'downswing', label: 'Downswing',        icon: '⬇️' },
+  { key: 'impact',    label: 'Impact Position', icon: '💥' },
+  { key: 'follow',    label: 'Follow-Through',  icon: '🏌️' },
 ];
 
 /* ─── State ─── */
 let frameBlobs = [];
 
-/* ─── DOM refs ─── */
-const fileInput        = document.getElementById('file-input');
-const uploadZone       = document.getElementById('upload-zone');
-const videoPreview     = document.getElementById('video-preview');
-const videoPreviewWrap = document.getElementById('video-preview-wrap');
-const videoMeta        = document.getElementById('video-meta');
-const framesSection    = document.getElementById('frames-section');
-const framesGrid       = document.getElementById('frames-grid');
-const framesHint       = document.getElementById('frames-hint');
-const analyzeBtn       = document.getElementById('analyze-btn');
-const loadingSection   = document.getElementById('loading-section');
-const resultsSection   = document.getElementById('results-section');
-const errorBox         = document.getElementById('error-box');
-const feedbackOutput   = document.getElementById('feedback-output');
-const scoreBbarWrap    = document.getElementById('score-bar-wrap');
-const extractor        = document.getElementById('extractor');
+/* ─── DOM ─── */
+const fileInput           = document.getElementById('file-input');
+const uploadZone          = document.getElementById('upload-zone');
+const videoPreview        = document.getElementById('video-preview');
+const videoPreviewWrap    = document.getElementById('video-preview-wrap');
+const videoMeta           = document.getElementById('video-meta');
+const framesSection       = document.getElementById('frames-section');
+const framesGrid          = document.getElementById('frames-grid');
+const extractionProgress  = document.getElementById('extraction-progress');
+const framesHint          = document.getElementById('frames-hint');
+const analyzeBtn          = document.getElementById('analyze-btn');
+const loadingSection      = document.getElementById('loading-section');
+const resultsSection      = document.getElementById('results-section');
+const resultsBody         = document.getElementById('results-body');
+const errorBox            = document.getElementById('error-box');
+const extractor           = document.getElementById('extractor');
 
 /* ─── Drag-and-drop ─── */
 uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
@@ -501,9 +513,8 @@ function handleFile(file) {
   videoPreviewWrap.style.display = 'block';
   videoMeta.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB`;
   videoPreview.onloadedmetadata = () => {
-    const dur = videoPreview.duration;
-    videoMeta.textContent += ` · ${Math.round(dur)}s`;
-    extractFrames(videoPreview, dur);
+    videoMeta.textContent += ` · ${Math.round(videoPreview.duration)}s`;
+    extractFrames(videoPreview, videoPreview.duration);
   };
 }
 
@@ -513,18 +524,20 @@ function seekTo(video, time) {
     const done = () => { video.removeEventListener('seeked', done); resolve(); };
     video.addEventListener('seeked', done);
     video.currentTime = time;
-    setTimeout(done, 2000);
+    setTimeout(done, 2500);
   });
 }
 
 async function extractFrames(video, duration) {
   framesGrid.innerHTML = '';
   frameBlobs = [];
-  framesSection.style.display = 'none';
+  framesSection.style.display = 'block';
   analyzeBtn.style.display = 'none';
+  extractionProgress.textContent = `Extracting frame 1 of ${NUM_FRAMES}…`;
+  framesHint.textContent = '';
 
   const times = Array.from({ length: NUM_FRAMES }, (_, i) =>
-    duration * (0.03 + (0.94 * i / (NUM_FRAMES - 1)))
+    duration * (0.02 + (0.96 * i / (NUM_FRAMES - 1)))
   );
 
   const ctx = extractor.getContext('2d');
@@ -534,21 +547,32 @@ async function extractFrames(video, duration) {
   extractor.width = w;
   extractor.height = h;
 
-  for (const t of times) {
-    await seekTo(video, t);
+  for (let i = 0; i < times.length; i++) {
+    extractionProgress.textContent = `Extracting frame ${i + 1} of ${NUM_FRAMES} — ${FRAME_LABELS[i]}…`;
+
+    await seekTo(video, times[i]);
     ctx.drawImage(video, 0, 0, w, h);
     frameBlobs.push(extractor.toDataURL('image/jpeg', JPEG_QUALITY));
 
+    const thumbAspect = video.videoHeight / video.videoWidth;
+    const thumbW = Math.round(80 / thumbAspect);
     const thumb = document.createElement('canvas');
-    const thumbH = Math.round(90 * aspect);
-    thumb.width = 90;
-    thumb.height = thumbH;
-    thumb.getContext('2d').drawImage(extractor, 0, 0, 90, thumbH);
-    framesGrid.appendChild(thumb);
+    thumb.width  = thumbW;
+    thumb.height = 80;
+    thumb.getContext('2d').drawImage(extractor, 0, 0, thumbW, 80);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'frame-thumb-wrap';
+    wrap.appendChild(thumb);
+    const lbl = document.createElement('div');
+    lbl.className = 'frame-label';
+    lbl.textContent = FRAME_LABELS[i];
+    wrap.appendChild(lbl);
+    framesGrid.appendChild(wrap);
   }
 
-  framesSection.style.display = 'block';
-  framesHint.textContent = `${frameBlobs.length} frames extracted and ready for analysis.`;
+  extractionProgress.textContent = '';
+  framesHint.textContent = `${frameBlobs.length} frames extracted across the full swing sequence.`;
   analyzeBtn.style.display = 'block';
 }
 
@@ -562,8 +586,8 @@ analyzeBtn.addEventListener('click', async () => {
   hideError();
 
   try {
-    const result = await callAnalyze(frameBlobs);
-    displayResults(result);
+    const raw = await callAnalyze(frameBlobs, FRAME_LABELS);
+    displayResults(raw);
   } catch (err) {
     showError(`Analysis failed: ${err.message}`);
   } finally {
@@ -572,20 +596,18 @@ analyzeBtn.addEventListener('click', async () => {
   }
 });
 
-/* ─── API call (server-side proxy) ─── */
-async function callAnalyze(frames) {
+/* ─── API call ─── */
+async function callAnalyze(frames, frameLabels) {
   const resp = await fetch('/api/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ frames }),
+    body: JSON.stringify({ frames, frameLabels }),
   });
-
   if (!resp.ok) {
     let msg = `Server error ${resp.status}`;
     try { const j = await resp.json(); msg = j.error || msg; } catch (_) {}
     throw new Error(msg);
   }
-
   const data = await resp.json();
   return data.result ?? '';
 }
@@ -593,49 +615,93 @@ async function callAnalyze(frames) {
 /* ─── Render results ─── */
 function displayResults(rawText) {
   let parsed = null;
-  const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    try { parsed = JSON.parse(jsonMatch[0]); } catch (_) {}
-  }
+  const match = rawText.match(/\{[\s\S]*\}/);
+  if (match) { try { parsed = JSON.parse(match[0]); } catch (_) {} }
 
   resultsSection.style.display = 'block';
-  feedbackOutput.innerHTML = '';
-  scoreBbarWrap.innerHTML  = '';
+  resultsBody.innerHTML = '';
 
   if (!parsed) {
     const pre = document.createElement('div');
     pre.className = 'raw-feedback';
     pre.textContent = rawText;
-    feedbackOutput.appendChild(pre);
+    resultsBody.appendChild(pre);
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
   }
 
-  if (parsed.summary) {
-    const bar = document.createElement('div');
-    bar.className = 'score-bar';
-    bar.innerHTML = `
-      <div class="score-circle"><span>🏌️</span></div>
-      <div class="score-text">
-        <h2>Overall Assessment</h2>
-        <p>${escHtml(parsed.summary)}</p>
-      </div>`;
-    scoreBbarWrap.appendChild(bar);
+  // Summary
+  const summaryBar = document.createElement('div');
+  summaryBar.className = 'summary-bar';
+  summaryBar.innerHTML = `
+    <div class="summary-icon">🏌️</div>
+    <div class="summary-text">
+      <h2>Overall Assessment</h2>
+      <p>${escHtml(parsed.summary || '')}</p>
+    </div>`;
+  resultsBody.appendChild(summaryBar);
+
+  // Skill level
+  if (parsed.skill_level) {
+    const skill = parsed.skill_level;
+    const cls = skill === 'Beginner'     ? 'skill-beginner'     :
+                skill === 'Intermediate' ? 'skill-intermediate' :
+                skill === 'Advanced'     ? 'skill-advanced'     : 'skill-competitive';
+    const row = document.createElement('div');
+    row.className = 'skill-row';
+    row.innerHTML = `<span class="skill-label">Skill Level:</span><span class="skill-badge ${cls}">${escHtml(skill)}</span>`;
+    resultsBody.appendChild(row);
   }
 
+  // Strengths
+  const strengths = parsed.strengths || [];
+  if (strengths.length) {
+    const panel = document.createElement('div');
+    panel.className = 'strengths-panel';
+    panel.innerHTML = `
+      <div class="panel-heading">✅ What You're Doing Well</div>
+      <ul>${strengths.map(s => `<li>${escHtml(s)}</li>`).join('')}</ul>`;
+    resultsBody.appendChild(panel);
+  }
+
+  // Priority improvements
+  const priorities = parsed.priority_improvements || [];
+  if (priorities.length) {
+    const panel = document.createElement('div');
+    panel.className = 'priorities-panel';
+    panel.innerHTML = `<div class="panel-heading">🎯 Top Priority Improvements</div>`;
+    priorities.forEach((p, i) => {
+      const item = document.createElement('div');
+      item.className = 'priority-item';
+      item.innerHTML = `<div class="priority-num">${i + 1}</div><div class="priority-text">${escHtml(p)}</div>`;
+      panel.appendChild(item);
+    });
+    resultsBody.appendChild(panel);
+  }
+
+  // Per-section cards
   const wrap = document.createElement('div');
   wrap.className = 'feedback-sections';
 
   SECTIONS.forEach(({ key, label, icon }) => {
     const sec = parsed.sections?.[key];
     if (!sec) return;
+
     const rating = sec.rating || 'Average';
-    const badgeClass =
-      rating === 'Good'       ? 'badge-good'    :
-      rating === 'Needs Work' ? 'badge-improve' : 'badge-average';
-    const tipsHTML = (sec.tips || []).length
-      ? `<ul>${sec.tips.map(t => `<li>${escHtml(t)}</li>`).join('')}</ul>`
+    const badgeClass = rating === 'Good' ? 'badge-good' : rating === 'Needs Work' ? 'badge-improve' : 'badge-average';
+
+    const observationsHTML = sec.observations
+      ? `<div class="observations-box"><div class="observations-label">What Claude sees</div>${escHtml(sec.observations)}</div>`
       : '';
+
+    const tipsHTML = (sec.tips || []).length
+      ? `<ul class="tips-list">${sec.tips.map(t => `<li>${escHtml(t)}</li>`).join('')}</ul>`
+      : '';
+
+    const drillHTML = sec.drill
+      ? `<div class="drill-box"><div class="drill-label">🏋️ Drill</div><div class="drill-text">${escHtml(sec.drill)}</div></div>`
+      : '';
+
     const div = document.createElement('div');
     div.className = 'feedback-section';
     div.innerHTML = `
@@ -645,35 +711,26 @@ function displayResults(rawText) {
         <span class="section-badge ${badgeClass}">${escHtml(rating)}</span>
       </div>
       <div class="section-body">
+        ${observationsHTML}
         <p>${escHtml(sec.feedback || '')}</p>
         ${tipsHTML}
+        ${drillHTML}
       </div>`;
     wrap.appendChild(div);
   });
 
-  feedbackOutput.appendChild(wrap);
+  resultsBody.appendChild(wrap);
   resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* ─── Helpers ─── */
 function escHtml(str) {
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-
-function showError(msg) {
-  errorBox.textContent = msg;
-  errorBox.style.display = 'block';
-  errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function hideError() {
-  errorBox.style.display = 'none';
-  errorBox.textContent = '';
-}
+function showError(msg) { errorBox.textContent = msg; errorBox.style.display = 'block'; errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+function hideError()    { errorBox.style.display = 'none'; errorBox.textContent = ''; }
 </script>
 </body>
 </html>
